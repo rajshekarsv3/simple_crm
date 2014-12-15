@@ -1,5 +1,7 @@
 <?php
-    session_start();
+    if(!isset($_SESSION)){
+        session_start();
+    }
     if(!empty($_SESSION['admin']))
     {
         header('Location: admin.php');
@@ -77,6 +79,7 @@
             <!-- /.navbar-header -->
 
             <ul class="nav navbar-top-links navbar-right">
+                <li id='welcomeUser'></li>
                 <li>
                     <button id="showDetailModal" type="button" class="btn btn-primary">Add School</button>
                 </li>
@@ -288,17 +291,7 @@
                                             </div>
                                             <hr>
                                             <ul id="comments_container" class="list-unstyled ui-sortable">
-                                                <strong class="pull-left primary-font">James</strong>
-                                                <small class="pull-right text-muted">
-                                                   <span class="glyphicon glyphicon-time"></span>7 mins ago</small>
-                                                </br>
-                                                <li class="ui-state-default">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. </li>
-                                                </br>
-                                                 <strong class="pull-left primary-font">Taylor</strong>
-                                                <small class="pull-right text-muted">
-                                                   <span class="glyphicon glyphicon-time"></span>14 mins ago</small>
-                                                </br>
-                                                <li class="ui-state-default">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</li>
+                                                
                                                 
                                             </ul>
                                             </div>

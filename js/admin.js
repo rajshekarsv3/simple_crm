@@ -38,25 +38,7 @@ var source;
 
 $(document).ready(function(){
 
-    //Display User Name
-
-    setTimeout(function(){
-        $.ajax({ 
-             url: 'server/',
-             data: {action: 'get_user'},
-             type: 'post', 
-             dataType: 'json',        
-             success: function(data) {
-                    if(data['error']==0)
-                    {
-                        $("#welcomeUser").text('Welcome '+data['username']);                     
-
-                    }
-                    
-                          
-                }
-        });
-    },10);
+    
     
     //Modal setting
     $("#showDetailModal").click(function(){
@@ -65,7 +47,7 @@ $(document).ready(function(){
         $("[name='detailForm']")[0].reset(); 
         $("#lastUpdatedBlock").html('');
         $('#comments_container').empty(); 
-        $("#myModalLabel").text("Add Details");      
+        $("#myModalLabel").text("Add Details");     
         $('#detailModal').modal('show'); 
     });
     $('#detailModal').modal({
@@ -121,6 +103,7 @@ $(document).ready(function(){
                     localdata: gridUpdate.getData(),
                     datafields:
                     [
+                        { name: 'name', type: 'string' },
                         { name: 'boardname', type: 'string' },
                         { name: 'city', type: 'string' },
                         { name: 'date_met', type: 'date' },
@@ -130,6 +113,7 @@ $(document).ready(function(){
                         { name: 'price_quoted', type: 'number' },
                         { name: 'school_name', type: 'string' },
                         { name: 'stage', type: 'string' },
+
                     ],
                     datatype: "json"
                 };
@@ -144,31 +128,108 @@ $(document).ready(function(){
             filterable: true,
             selectionmode: 'singlerow',
             source: dataAdapter,
+            showaggregates: true,
             columns: [
-              { text: 'School Name', columntype: 'textbox', filtertype: 'input', datafield: 'school_name', width: 350 },
+              {
+                  text: 'Salesman Name', filtertype: 'checkedlist', datafield: 'name', width: 100
+              },
+              { text: 'School Name', columntype: 'textbox', filtertype: 'input', datafield: 'school_name', width: 350 ,
+                    aggregates: ['count'],aggregatesrenderer: function (aggregates) {
+                      var value = aggregates['count'];
+                      $("#schoolAggregateContainer").text(value);
+                      $("#reportTable").show();
+                      
+                  }
+                },
               {
                   text: 'City Name', filtertype: 'checkedlist', datafield: 'city', width: 100
               },
               {
                   text: 'Board Name', filtertype: 'checkedlist', datafield: 'boardname', width: 100
               },
-              { text: 'No of Students.', datafield: 'no_of_students', filtertype: 'number',  cellsalign: 'right', width: 100 },
-              { text: 'Price Quoted', datafield: 'price_quoted', filtertype: 'number',  cellsalign: 'right', width: 100 },
-              { text: 'Deal Price.', datafield: 'deal_value', filtertype: 'number',  cellsalign: 'right', width: 100 },              
+              { text: 'No of Students.', datafield: 'no_of_students', filtertype: 'number',  cellsalign: 'right', width: 100,
+                    aggregates: ['sum'],aggregatesrenderer: function (aggregates) {
+                      var value = aggregates['sum'];
+                      $("#studentAggregateContainer").text(value);
+                    }      
+                },
+              { text: 'Price Quoted', datafield: 'price_quoted', filtertype: 'number',  cellsalign: 'right', width: 100,
+                    aggregates: ['avg'],aggregatesrenderer: function (aggregates) {
+                      var value = aggregates['avg'];
+                      $("#priceQuotedAggregateContainer").text(value);
+                    }      
+               },
+              { text: 'Deal Price.', datafield: 'deal_value', filtertype: 'number',  cellsalign: 'right', width: 100,
+                    aggregates: ['sum'] ,aggregatesrenderer: function (aggregates) {
+                      var value = aggregates['sum'];
+                      $("#dealValueAggregateContainer").text(value);
+                    }      
+                 },              
               { text: 'Date Met', datafield: 'date_met', filtertype: 'range', width: 200, cellsalign: 'right', cellsformat: 'd' },
-              { text: 'Stage.', datafield: 'stage', filtertype: 'checkedlist',  cellsalign: 'right' , width: 100 }
-            ]
+              { text: 'Stage.', datafield: 'stage', filtertype: 'checkedlist',  cellsalign: 'right' , width: 100 ,
+                     aggregates: [
+                          { 'Stage -1':
+                            function (aggregatedValue, currentValue) {
+                                if (currentValue == "-1") {
+                                    return aggregatedValue + 1;
+                                }
+
+                                return aggregatedValue;
+                            }
+                          },
+                          { 'Stage 0':
+                            function (aggregatedValue, currentValue) {
+                                if (currentValue == "0") {
+                                    return aggregatedValue + 1;
+                                }
+
+                                return aggregatedValue;
+                            }
+                          },
+                          { 'Stage 1':
+                            function (aggregatedValue, currentValue) {
+                                if (currentValue == "1") {
+                                    return aggregatedValue + 1;
+                                }
+
+                                return aggregatedValue;
+                            }
+                          },
+                          { 'Stage 2':
+                            function (aggregatedValue, currentValue) {
+                                if (currentValue == "2") {
+                                    return aggregatedValue + 1;
+                                }
+
+                                return aggregatedValue;
+                            }
+                          }
+                      ],
+                      aggregatesrenderer: function (aggregates) {
+                      var stage = aggregates['Stage -1'];
+                      var stage0 = aggregates['Stage 0'];
+                      var stage1 = aggregates['Stage 1'];
+                      var stage2 = aggregates['Stage 2'];
+                      $("#stageAggregateContainer").text(stage);
+                      $("#stage0AggregateContainer").text(stage0);
+                      $("#stage1AggregateContainer").text(stage1);
+                      $("#stage2AggregateContainer").text(stage2);
+                    } 
+
+                }
+            ],
+
         }); 
 
     //onclick grid trigger
 
     $("#schoolGrid").bind('rowselect', function (event) {
-        console.log(event.args.row.id);
+        console.log(event.args.row);
         formUpdate.edit = true;
         formUpdate.schoolId = event.args.row.id; 
         gridUpdate.editData();
-        $("#myModalLabel").text("Edit Details");
-        $("[name='comments']").val(''); 
+        $("[name='comments']").val('');
+        $("#myModalLabel").text("Edit Details/Sales By "+event.args.row.name);
         setTimeout(function () {
                         $("#schoolGrid").jqxGrid('clearselection');
                     }, 10);

@@ -6,7 +6,9 @@
     $conn = new PDO("mysql:host=$host;dbname=$dbName", $dbUsername, $dbPassword);
     // set the PDO error mode to exception
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    session_start();
+    if(!isset($_SESSION)){
+	    session_start();
+	}
 	function insert_details($details)
 	{
 		global $conn;
@@ -142,7 +144,7 @@ WHERE id=:school_detail_id");
 		global $conn;
 		try{
 			if(!empty($_SESSION['admin']))
-				$query = $conn->prepare("SELECT id,user_id,school_name,city,boardname,no_of_students,price_quoted,deal_value,date_met,stage FROM school_details");
+				$query = $conn->prepare("SELECT sd.id,u.name,sd.school_name,sd.city,sd.boardname,sd.no_of_students,sd.price_quoted,sd.deal_value,sd.date_met,sd.stage FROM school_details sd,users u where sd.user_id=u.id");
 			else
 				$query = $conn->prepare("SELECT id,school_name,city,boardname,no_of_students,price_quoted,deal_value,date_met,stage FROM school_details WHERE user_id=".$_SESSION['user']);
 			

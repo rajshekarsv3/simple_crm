@@ -15,6 +15,9 @@ if(isset($_POST['action']) && !empty($_POST['action'])) {
         case 'fetch_full_data':
         	fetch_full_data();
         	break;
+        case 'get_user':
+        	get_user();
+        	break;
 
         
     }
@@ -151,7 +154,7 @@ function update_school_detail()
 
 function login()
 {
-	session_start();
+	
 	try{
 		if( ! isset($_POST['username']) || empty($_POST['username']))
 			throw new Exception("Enter User Name");
@@ -212,6 +215,19 @@ function fetch_full_data()
     	$response['school_data'] = get_full_detail_of_a_school($_POST['school_detail_id']);
     	$response['comments'] = get_comments($_POST['school_detail_id']);
     }
+    echo json_encode($response);
+}
+function get_user()
+{
+	if(empty($_SESSION['admin']) && empty($_SESSION['user']))
+    {
+        $response['error'] = 1;
+		$response['message'] = "Not logged in";
+		echo json_encode($response);
+		return;
+    }
+    $response['error'] = 0;
+    $response['username'] = get_username();
     echo json_encode($response);
 }
 
