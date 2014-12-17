@@ -35,18 +35,23 @@ $(function() {
 
 var dataAdapter;
 var source;
+var stageDataAdapter;
+var stageSource;
 
 $(document).ready(function(){
 
-    
+
     
     //Modal setting
     $("#showDetailModal").click(function(){
+        formUpdate.previousStage = false;
+        formUpdate.currentStage = false;
         formUpdate.edit = false;
         formUpdate.schoolId = undefined; 
         $("[name='detailForm']")[0].reset(); 
         $("#lastUpdatedBlock").html('');
         $('#comments_container').empty(); 
+        $("#deleteSchool").hide();
         $("#myModalLabel").text("Add Details");     
         $('#detailModal').modal('show'); 
     });
@@ -113,6 +118,7 @@ $(document).ready(function(){
                         { name: 'price_quoted', type: 'number' },
                         { name: 'school_name', type: 'string' },
                         { name: 'stage', type: 'string' },
+                        { name: 'follow_up_date', type: 'date'}
 
                     ],
                     datatype: "json"
@@ -216,24 +222,112 @@ $(document).ready(function(){
                       $("#stage2AggregateContainer").text(stage2);
                     } 
 
-                }
+                },
+                { text: 'Follow Up Date', datafield: 'follow_up_date', filtertype: 'range', width: 200, cellsalign: 'right', cellsformat: 'd' },
             ],
+
+        });
+
+
+    //Grid for stages
+
+
+    stageSource = {
+                    localdata: gridUpdate.getStageData(),
+                    datafields:
+                    [
+                        { name: 'changed_by', type: 'string' },
+                        { name: 'content', type: 'string' },
+                       
+                        { name: 'date_converted', type: 'date' },
+                        
+
+                    ],
+                    datatype: "json"
+                };
+                
+    stageDataAdapter = new $.jqx.dataAdapter(stageSource);
+    //jQwidget stuff
+    $("#stageGrid").jqxGrid(
+        {
+            width: '100%',            
+            showfilterrow: true,
+            filterable: true,
+            source: stageDataAdapter,            
+            columns: [
+              {
+                  text: 'Salesman Name', filtertype: 'checkedlist', datafield: 'changed_by', width: '20%'
+              },
+              { text: 'School Name', columntype: 'textbox', filtertype: 'input', datafield: 'content', width: '60%' ,
+            },
+             
+              { text: 'Date Converted', datafield: 'date_converted', filtertype: 'range', width: '20%', cellsalign: 'right', cellsformat: 'd'},
+              
+            ]
 
         }); 
 
     //onclick grid trigger
 
     $("#schoolGrid").bind('rowselect', function (event) {
+        formUpdate.previousStage = false;
+        formUpdate.currentStage = false;
         console.log(event.args.row);
         formUpdate.edit = true;
         formUpdate.schoolId = event.args.row.id; 
         gridUpdate.editData();
         $("[name='comments']").val('');
+        $("#deleteSchool").show();
         $("#myModalLabel").text("Edit Details/Sales By "+event.args.row.name);
         setTimeout(function () {
                         $("#schoolGrid").jqxGrid('clearselection');
                     }, 10);
     });
+
+        //Delete School
+
+    $("#deleteSchool").click(function(){
+         var can_delete = confirm("Are you sure about deleting, this cannot be undone");
+         if(can_delete)
+            gridUpdate.deleteData();
+    }); 
+
+
+    //bind filter event
+
+    $("#schoolGrid").bind('filter',function(event){
+        //parsing filters to apply it for second filter
+        var filterGroups = $("#schoolGrid").jqxGrid('getfilterinformation');
+        var info = "";
+         for (var i = 0; i < filterGroups.length; i++) {
+             var filterGroup = filterGroups[i];
+
+             var filters = filterGroup.filter.getfilters();
+             for (var j = 0; j < filters.length; j++) {
+                 info += "\nFilter: ";
+                 info += "\nValue: " + filters[j].value;
+                 info += "\nCondition: " + filters[j].condition;
+                 info += "\nOperator: " + filters[j].operator;
+             }
+         }
+         console.log(info);
+        if($("#row0schoolGrid > div:nth-child(1) > span").text()=="No data to display")
+                {
+                     $("#reportTable").hide();  
+                }
+    })
+
+
+        //Tracking stage change
+
+    $("[name='stage']").focus(function(){
+        console.log($("[name='stage']").val());
+        formUpdate.previousStage = $("[name='stage']").val();
+    }).change(function(){
+        console.log($("[name='stage']").val());
+        formUpdate.currentStage = $("[name='stage']").val();
+    })
+ 
 
 
    
@@ -242,6 +336,8 @@ $(document).ready(function(){
 
 
 var formUpdate = {
+        previousStage: false,
+        currentStage: false,
         edit: false,
         schoolId: false,
         save: function()
@@ -291,6 +387,11 @@ var formUpdate = {
             formData.push({name: 'edit', value: formUpdate.edit});
             formData.push({name: 'school_detail_id', value: formUpdate.schoolId});
         }
+        if(formUpdate.previousStage && formUpdate.currentStage)
+        {
+            formData.push({name: 'previous_stage', value: formUpdate.previousStage});
+            formData.push({name: 'current_stage', value: formUpdate.current_stage});
+        }
         console.log(formData);
         $.ajax({ 
              url: 'server/',
@@ -324,6 +425,25 @@ var gridUpdate = {
              url: 'server/',
              async: false,
              data: {action: 'fetch_data'},
+             dataType: 'json',
+             type: 'post',                  
+             success: function(data) {
+                    
+                    grid_data = data;
+                          
+                }
+            });
+
+            return grid_data;
+            
+        },
+        getStageData: function()
+        {
+            var grid_data;
+            $.ajax({ 
+             url: 'server/',
+             async: false,
+             data: {action: 'fetch_stages'},
              dataType: 'json',
              type: 'post',                  
              success: function(data) {
@@ -388,6 +508,26 @@ var gridUpdate = {
                     });
                     $('#comments_container').append(comments_to_be_appended);
                     $('#detailModal').modal('show'); 
+
+                    
+                    
+                          
+                }
+            });
+        },
+        deleteData: function(){
+            $.ajax({ 
+             url: 'server/',
+             data: {action: 'delete_data',
+                    school_detail_id: formUpdate.schoolId},
+             type: 'post', 
+             dataType: 'json',        
+             success: function(data) {
+                    
+                        alert("Deleted Successfully"); 
+                        $('#detailModal').modal('hide'); 
+                        source.localdata = gridUpdate.getData();
+                        dataAdapter.dataBind();                    
 
                     
                     

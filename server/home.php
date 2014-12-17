@@ -18,6 +18,10 @@ if(isset($_POST['action']) && !empty($_POST['action'])) {
         case 'get_user':
         	get_user();
         	break;
+        case 'delete_data':
+        	delete_data();
+        case 'fetch_stages':
+        	fetch_stages();
 
         
     }
@@ -98,7 +102,7 @@ function update_school_detail()
 			throw new Exception("Enter Point of contact's contact detail");*/
 		if( ! isset($_POST['dateMet']) || empty($_POST['dateMet']))
 			throw new Exception("Select Date Met");
-		if( ! isset($_POST['stage']) || empty($_POST['stage']) || strlen($_POST['stage']) >2)
+		if( ! isset($_POST['stage']) || strlen($_POST['stage']) >2)
 			throw new Exception("Select Valid Stage");
 
 	}
@@ -141,7 +145,7 @@ function update_school_detail()
 			
 		}
 	}
-	if(isset($_POST['comments']) || ! empty($_POST['comments']))
+	if(isset($_POST['comments']) && ! empty($_POST['comments']))
 	{
 		if(!insert_comment($school_detail_id,$_POST['comments']))
 		{
@@ -149,6 +153,16 @@ function update_school_detail()
 			$response['message'] = "School details updated .Couldn't insert Comment.Please Try again";
 		}
 	}
+	if((isset($_POST['previous_stage']) || ! empty($_POST['previous_stage']))&&(isset($_POST['current_stage']) || ! empty($_POST['current_stage']))&& !empty($_POST['edit']))
+	{
+		if(!insert_stage($school_detail_id,$_POST['previous_stage'],$_POST['current_stage']))
+		{
+			$response['error'] = 0;
+			
+		}
+	}
+	if(!insert_initial_stage($_POST['stage'],$school_detail_id,$_POST['dateMet']))
+		$response['error'] = 1;
 	echo json_encode($response);
 }
 
@@ -230,5 +244,21 @@ function get_user()
     $response['username'] = get_username();
     echo json_encode($response);
 }
-
+function delete_data()
+{
+	$response = delete_school_data($_POST['school_detail_id']);
+	echo json_encode($response);
+}
+function fetch_stages()
+{
+	if(empty($_SESSION['admin']))
+    {
+        $response['error'] = 1;
+		$response['message'] = "Not logged in";
+		echo json_encode($response);
+		return;
+    }
+    $response = get_stages();
+    echo json_encode($response);
+}
 ?>

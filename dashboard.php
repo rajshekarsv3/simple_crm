@@ -99,18 +99,18 @@
             </ul>
             <!-- /.navbar-top-links -->
 
-            <div class="navbar-default sidebar" role="navigation">
+            <!-- <div class="navbar-default sidebar" role="navigation">
                 <div class="sidebar-nav navbar-collapse">
                     <ul class="nav" id="side-menu">
                         
                         <li>
-                            <a class="active" href="home.html"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
+                            <a class="active" href="dashboard.php"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
                         </li>
                         
                     </ul>
                 </div>
                 <!-- /.sidebar-collapse -->
-            </div>
+            <!--/div> -->
             <!-- /.navbar-static-side -->
         </nav>
 
@@ -312,6 +312,7 @@
                         </div>
           </div>
           <div class="modal-footer">
+            <button id="deleteSchool" style="display:none" type="button" class="btn btn-danger">Delete</button>
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             <button id="saveChanges" type="button" class="btn btn-primary">Save changes</button>
           </div>
